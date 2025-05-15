@@ -5,6 +5,8 @@
   }
 
 #canvas {
+      width: 1280px;
+      height: 720px;
       padding-left: 0;
       padding-right: 0;
       margin: auto;
@@ -14,7 +16,7 @@
       bottom: 0;
       left: 0;
       right: 0;
-  
+      z-index: 10;
       /* border: 2px solid black; */
 }
 

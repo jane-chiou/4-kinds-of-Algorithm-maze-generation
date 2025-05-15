@@ -26,6 +26,7 @@ class Node {
 
 class Maze {
     constructor(width, height) {
+        console.log(`Maze dimensions: ${width}x${height}`);
         this.width = width;
         this.height = height;
         this.map = this.newMap(); // the array of nodes defining the maze
@@ -55,6 +56,7 @@ class Maze {
     }
 
     setOrigin(x, y) {
+        console.log(`Origin set to: ${x}, ${y}`);
         this.origin.x = x;
         this.origin.y = y;
     }
@@ -79,6 +81,8 @@ class Maze {
         // the node in this direction becomes the new origin node
         this.setOrigin(this.nextOrigin.x, this.nextOrigin.y);
         this.map[this.origin.y][this.origin.x].setDirection(0, 0);
+
+        //console.log("captinLuma Maze map updated:", this.map);
     }
 }
 
@@ -142,6 +146,7 @@ document.addEventListener("keydown", function(event) {
 document.getElementById('apply').addEventListener('click', updateMazeDimensions);
 
 function updateMazeDimensions() {
+    console.log('updateMazeDimensions called');
     // validate
     try {
         mazeWidth = parseInt(document.getElementById('width').value);
