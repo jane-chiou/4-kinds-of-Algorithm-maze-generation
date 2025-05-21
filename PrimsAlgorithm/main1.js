@@ -1,12 +1,13 @@
 // global variables (feel free to edit these values)
-let mazeWidth = 25;
-let mazeHeight = 25;
+let mazeWidth = 30;
+let mazeHeight = 30;
 let algorithmIterations = mazeWidth * mazeHeight * 10; // how many iterations should be performed when running the algorithm
 let animationFPS = 3; // frames per second
 let drawArrow = false; // whether to show the direction of each node or not. Toggle with "a" key
 let highlightOrigin = true; // wether to highlight the origin node or not. Toggle with "o" key
 let hideText = false; // Toggle with "h" keyg
 let animate = false; //  whether to animate the algorithm or not. Toggle with space bar
+let iterateOrNot = true; // whether to iterate or not. Toggle with "i" key
 
 // 這個類別用來繪製迷宮的視圖，包含一個canvas元素和一個2D繪圖上下文
 // 它有一個drawMaze方法，用來繪製迷宮，這個方法接受一個迷宮物件和一些選項參數
@@ -43,12 +44,17 @@ class Maze {
     //隨機選擇起始地點
     initialize(){
         console.log("Initializing maze...");
+        this.map = this.newMap(); // ← 每次初始化都重建地圖
+        this.visited = [];
+        this.walls = [];
 
         // 產生只會在邊界的 x, y
         let edgePositions = [0, this.width - 1];
-        let startX, startY;
-        if (Math.random() < 0.5) {
+        let startX = 0;
+        let startY = 0;
+        //if (Math.random() < 0.5) {
         // x 在邊界，y// 持續隨機直到不是四個角落
+        console.log('iterateOrNot:', iterateOrNot);
         while (true) {
             if (Math.random() < 0.5) {
                 startX = edgePositions[Math.floor(Math.random() * 2)];
@@ -58,28 +64,25 @@ class Maze {
                 startY = edgePositions[Math.floor(Math.random() * 2)];
                 startX = getRandomInt(0, this.width);
             }
+            console.log(`Random start position: (${startX}, ${startY})`);
             // 如果不是四個角落就跳出
             if (!((startX === 0 || startX === this.width - 1) && (startY === 0 || startY === this.height - 1))) {
                 break;
             }
         }
 
-
-    
-        //let startX = getRandomInt(0, this.width);
-        //let startY = getRandomInt(0, this.height);
         this.origin = { x: startX, y: startY }; // 在 initialize 方法中設置
         this.map[startY][startX] = 0; //0 表示通路
         this.visited.push({ x: startX, y: startY });
         this.addWalls(startX, startY);
         console.log("Maze initialized:", this.map);
         console.log("Origin set to:", this.origin);
-        }
+        //}
     }
 
     // 將節點的鄰居加入邊界清單
     addWalls(startX, startY) {
-        console.log(`Adding walls around (${startX}, ${startY})`);
+        //console.log(`Adding walls around (${startX}, ${startY})`);
         const directions = [
             { dx: -1, dy: 0 },//左
             { dx: 1, dy: 0 },//右
@@ -94,7 +97,7 @@ class Maze {
                 //如果nx和ny在範圍內，並且這個位置是牆壁，將這個牆壁加入邊界清單
                 this.walls.push({ x: nx, y: ny, px: startX, py: startY }); 
             }
-            console.log(`Wall added: (${nx}, ${ny}) with parent (${startX}, ${startY})`);
+            //console.log(`Wall added: (${nx}, ${ny}) with parent (${startX}, ${startY})`);
         }
     }
 
@@ -119,21 +122,22 @@ class Maze {
             const ny = y + dy;
 
         // 检查对面单元格是否有效且未访问
-    if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height && 
-        this.map[ny][nx] === 1) {
+        if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height && 
+            this.map[ny][nx] === 1) {
+            
+            // 打通当前墙和对面单元格
+            this.map[y][x] = 0;
+            this.map[ny][nx] = 0;
+            this.visited.push({x: x, y: y});
+            
+            // 添加新单元格的邻墙
+            this.addWalls(nx, ny);
+            
+            return true; // 返回true表示有变化
+        }
         
-        // 打通当前墙和对面单元格
-        this.map[y][x] = 0;
-        this.map[ny][nx] = 0;
-        this.visited.push({x: x, y: y});
-        
-        // 添加新单元格的邻墙
-        this.addWalls(nx, ny);
-        
-        return true; // 返回true表示有变化
-    }
-    
-    return false; // 返回false表示无变化
+        iterateOrNot = false; // 如果没有变化，设置为false 
+        return false; // 返回false表示无变化
 
         // 如果牆的另一側節點未訪問，將其設為通路
         /*if (this.map[y][x] === 1) {
@@ -170,8 +174,20 @@ function mainLoop() {
 // event listeners
 document.addEventListener("click", function(event) {
     let start = Date.now();
-    for (let i = 0; i < algorithmIterations; i++) {
+    if(iterateOrNot === true){
+        for (let i = 0; i < algorithmIterations; i++) {
+            maze.iterate();
+        }
+    }
+    else{
+        maze = new Maze(mazeWidth, mazeHeight);
+        maze.initialize();
+        view.drawMaze(maze, highlightOrigin, hideText);
+        //this.walls = [];
+        //this.visited = [];
         maze.iterate();
+        iterateOrNot = true;
+        console.log("Maze reinitialized");
     }
     let end = Date.now();
     console.log(`Performed ${algorithmIterations} iterations. Execution time: ${end - start} milliseconds`);

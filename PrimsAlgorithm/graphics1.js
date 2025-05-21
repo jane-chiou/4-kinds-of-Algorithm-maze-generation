@@ -17,11 +17,11 @@ class View {
     drawText() {
         this.ctx.fillStyle = "rgb(150, 150, 150)";
         this.ctx.font = "17px helvetica";
-        this.ctx.fillText('Right click to generate maze', 10, 20);
+        //this.ctx.fillText('Right click to generate maze', 10, 20);
         this.ctx.fillText('Space bar to toggle animation', 10, 40);
         this.ctx.fillText('"i" key to iterate once', 10, 60);
-        this.ctx.fillText('"o" key to toggle highlight origin', 10, 100);
-        this.ctx.fillText('"h" key to hide text', 10, 140);
+        this.ctx.fillText('"o" key to toggle highlight origin', 10, 80);
+        this.ctx.fillText('"h" key to hide text', 10, 100);
     }
 
     drawMaze(maze, highlightOrigin = true, hideText = false, marginY = 50) {
@@ -29,11 +29,11 @@ class View {
         this.drawBackground();
         if (!hideText) this.drawText();
 
-        console.log("Canvas context:", this.ctx);
+        /*console.log("Canvas context:", this.ctx);
         if (!this.ctx) {
             console.error("Canvas context is not defined!");
             return;
-        }
+        }*/
 
         //計算節點大小和位置
         let size = (this.cnv.height - marginY * 2) / maze.height;
@@ -78,39 +78,39 @@ class View {
 
 
         // 在drawMaze方法中改进绘制逻辑
-for (let y = 1; y < maze.height; y++) {
-    for (let x = 1; x < maze.width; x++) {
-        const xPos = x * size + marginX;
-        const yPos = y * size + marginY;
-        
-        // 绘制单元格背景
-        this.ctx.fillStyle = maze.map[y][x] === 1 ? "rgb(0, 100, 200)" : "rgb(255, 255, 255)";
-        this.ctx.fillRect(xPos, yPos, size, size);
-        
-        // 绘制单元格边框
-        this.ctx.strokeStyle = "rgb(50, 50, 50)";
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(xPos, yPos, size, size);
-    }
-}
+        for (let y = 1; y < maze.height; y++) {
+            for (let x = 1; x < maze.width; x++) {
+                const xPos = x * size + marginX;
+                const yPos = y * size + marginY;
+                
+                // 绘制单元格背景
+                this.ctx.fillStyle = maze.map[y][x] === 1 ? "rgb(0, 100, 200)" : "rgb(255, 255, 255)";
+                this.ctx.fillRect(xPos, yPos, size, size);
+                
+                // 绘制单元格边框
+                this.ctx.strokeStyle = "rgb(50, 50, 50)";
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeRect(xPos, yPos, size, size);
+            }
+        }
 
-// 先畫四個邊
-for (let y = 0; y < maze.height; y++) {
-    this.ctx.fillStyle = "rgb(0, 100, 200)";
-    let xPosLeft = 0 * size + marginX;
-    let xPosRight = (maze.width - 1) * size + marginX;
-    let yPos = y * size + marginY;
-    this.ctx.fillRect(xPosLeft, yPos, size, size);
-    this.ctx.fillRect(xPosRight, yPos, size, size);
-}
-for (let x = 0; x < maze.width; x++) {
-    this.ctx.fillStyle = "rgb(0, 100, 200)";
-    let xPos = x * size + marginX;
-    let yPosTop = 0 * size + marginY;
-    let yPosBottom = (maze.height - 1) * size + marginY;
-    this.ctx.fillRect(xPos, yPosTop, size, size);
-    this.ctx.fillRect(xPos, yPosBottom, size, size);
-}
+        // 先畫四個邊
+        for (let y = 0; y < maze.height; y++) {
+            this.ctx.fillStyle = "rgb(0, 100, 200)";
+            let xPosLeft = 0 * size + marginX;
+            let xPosRight = (maze.width - 1) * size + marginX;
+            let yPos = y * size + marginY;
+            this.ctx.fillRect(xPosLeft, yPos, size, size);
+            this.ctx.fillRect(xPosRight, yPos, size, size);
+        }
+        for (let x = 0; x < maze.width; x++) {
+            this.ctx.fillStyle = "rgb(0, 100, 200)";
+            let xPos = x * size + marginX;
+            let yPosTop = 0 * size + marginY;
+            let yPosBottom = (maze.height - 1) * size + marginY;
+            this.ctx.fillRect(xPos, yPosTop, size, size);
+            this.ctx.fillRect(xPos, yPosBottom, size, size);
+        }
 
         //if (!highlightOrigin) return;
 
@@ -119,7 +119,7 @@ for (let x = 0; x < maze.width; x++) {
             this.ctx.fillStyle = "rgb(255, 0, 0)";
             let xPos = maze.origin.x * size + marginX ;
             let yPos = maze.origin.y * size + marginY ;
-            
+                
             this.ctx.beginPath();
             //this.ctx.arc(xPos, yPos, nodeRadius, 0, 2*Math.PI);
             this.ctx.fillRect(xPos, yPos, size, size);
