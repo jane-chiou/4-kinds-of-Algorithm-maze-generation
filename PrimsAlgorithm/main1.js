@@ -138,20 +138,6 @@ class Maze {
         
         iterateOrNot = false; // 如果没有变化，设置为false 
         return false; // 返回false表示无变化
-
-        // 如果牆的另一側節點未訪問，將其設為通路
-        /*if (this.map[y][x] === 1) {
-            
-            
-
-            if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height && this.map[ny][nx] === 1) {
-                this.map[y][x] = 0; // 打通当前墙
-                this.visited.push({x: nx, y: ny}); // 标记对面节点为已访问
-                this.addWalls(nx, ny); // 添加新节点的邻墙
-            }
-        }*/
-
-        console.log("Maze map updated:", this.map);
     }
 }
 

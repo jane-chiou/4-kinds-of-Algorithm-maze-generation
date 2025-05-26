@@ -52,31 +52,6 @@ class View {
         }
         //console.log(`Node size: ${size}, MarginX: ${marginX}, MarginY: ${marginY}`);
 
-        //繪製迷宮節點
-        //console.log("Maze map:", maze.map);
-        //this.ctx.fillStyle = "rgb(0, 20, 255)";
-        /*for (let y = 0; y < maze.height; y++) {
-            for (let x = 0; x < maze.width; x++) {
-                //console.log(`Value at (${x}, ${y}): ${maze.map[y][x]}`);
-                if(maze.map[y][x] === 1){
-                    this.ctx.fillStyle = "rgb(0, 200, 255)";
-                }
-                else{
-                    this.ctx.fillStyle = "rgb(255, 255, 255)";
-                }
-                    let xPos = x * size + marginX + size / 2;
-                    let yPos = y * size + marginY + size / 2;
-                    //console.log(`Drawing node at (${xPos}, ${yPos})`);
-                    // draw node
-                    this.ctx.beginPath();
-                    this.ctx.arc(xPos, yPos, nodeRadius, 0, 2*Math.PI);
-                    this.ctx.fill();
-                
-            }
-        }*/
-    // 先畫四個邊
-
-
         // 在drawMaze方法中改进绘制逻辑
         for (let y = 1; y < maze.height; y++) {
             for (let x = 1; x < maze.width; x++) {
