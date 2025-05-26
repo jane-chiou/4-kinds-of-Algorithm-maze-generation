@@ -1,168 +1,96 @@
 // global variables (feel free to edit these values)
 let mazeWidth = 30;
 let mazeHeight = 30;
-let algorithmIterations = mazeWidth * mazeHeight * 10; // how many iterations should be performed when running the algorithm
+let algorithmIterations = mazeWidth * mazeHeight; // limit iterations to maze size
 let animationFPS = 3; // frames per second
 let drawArrow = false; // whether to show the direction of each node or not. Toggle with "a" key
-let highlightOrigin = true; // wether to highlight the origin node or not. Toggle with "o" key
-let hideText = false; // Toggle with "h" keyg
-let animate = false; //  whether to animate the algorithm or not. Toggle with space bar
+let highlightOrigin = true; // whether to highlight the origin node or not. Toggle with "o" key
+let hideText = false; // Toggle with "h" key
+let animate = false; // whether to animate the algorithm or not. Toggle with space bar
 let iterateOrNot = true; // whether to iterate or not. Toggle with "i" key
 
-// 這個類別用來繪製迷宮的視圖，包含一個canvas元素和一個2D繪圖上下文
-// 它有一個drawMaze方法，用來繪製迷宮，這個方法接受一個迷宮物件和一些選項參數
-// drawMaze方法會計算迷宮的大小和位置，然後用canvas的2D繪圖上下文來繪製迷宮
 class Maze {
-    //  初始化迷宮的高度寬度，生成nodes的map
     constructor(width, height) {
         this.width = width;
         this.height = height;
         console.log(`Maze dimensions: ${width}x${height}`);
         this.map = this.newMap(); // the array of nodes defining the maze
-        // an array containing the possible directions the origin can travel in
-        this.visited = [];//紀錄已經遍歷過的節點
-        this.walls = [];//紀錄節點邊界的節點
-        this.origin = null; // 初始化 origin 為 null
+        this.stack = []; // stack to track cells being processed
+        this.origin = null; // initialize origin as null
     }
 
-    //初始化迷宮地圖為牆壁
+    // Initialize maze map with all walls
     newMap() {
         let map = [];
         for (let y = 0; y < this.height; y++) {
             map.push([]);
             for (let x = 0; x < this.width; x++) {
-                map[y].push(1);//數字1表示牆壁
+                map[y].push(1); // 1 indicates a wall
             }
-            //map[y].push(new Node(0, 1));//最右邊的那排節點箭頭向下
         }
         console.log("New map created:", map);
-        //map[this.height - 1][this.width - 1].setDirection(0, 0);//設最右下角的節點為原點
-
         return map;
     }
 
-    //隨機選擇起始地點
-    initialize(){
-        console.log("Initializing maze...");
-        this.map = this.newMap(); // ← 每次初始化都重建地圖
-        this.visited = [];
-        this.walls = [];
+    // Set up the maze with Binary Tree Algorithm starting point
+    initialize() {
+        console.log("Initializing maze with Binary Tree Algorithm...");
+        this.map = this.newMap(); // reset map with all walls
+        this.stack = [];
 
-        // 產生只會在邊界的 x, y
-        let edgePositions = [0, this.width - 1];
+        // Set starting cell at (0,0)
         let startX = 0;
         let startY = 0;
-        //if (Math.random() < 0.5) {
-        // x 在邊界，y// 持續隨機直到不是四個角落
-        console.log('iterateOrNot:', iterateOrNot);
-        while (true) {
-            if (Math.random() < 0.5) {
-                startX = edgePositions[Math.floor(Math.random() * 2)];
-                startY = getRandomInt(0, this.height);
-            } 
-            else {
-                startY = edgePositions[Math.floor(Math.random() * 2)];
-                startX = getRandomInt(0, this.width);
-            }
-            console.log(`Random start position: (${startX}, ${startY})`);
-            // 如果不是四個角落就跳出
-            if (!((startX === 0 || startX === this.width - 1) && (startY === 0 || startY === this.height - 1))) {
-                break;
-            }
-        }
-
-        this.origin = { x: startX, y: startY }; // 在 initialize 方法中設置
-        this.map[startY][startX] = 0; //0 表示通路
-        this.visited.push({ x: startX, y: startY });
-        this.addWalls(startX, startY);
-        console.log("Maze initialized:", this.map);
-        console.log("Origin set to:", this.origin);
-        //}
+        this.origin = { x: startX, y: startY };
+        this.map[startY][startX] = 0; // 0 indicates a passage
+        this.stack.push({ x: startX, y: startY });
+        console.log("Maze initialized with start at:", this.origin);
     }
 
-    // 將節點的鄰居加入邊界清單
-    addWalls(startX, startY) {
-        //console.log(`Adding walls around (${startX}, ${startY})`);
-        const directions = [
-            { dx: -1, dy: 0 },//左
-            { dx: 1, dy: 0 },//右
-            { dx: 0, dy: -1 },//上
-            { dx: 0, dy: 1 }//下
-        ];
-        for (let dir of directions) {
-            let nx = startX + dir.dx;// 計算新位置的 x 坐標
-            let ny = startY + dir.dy;// 計算新位置的 y 坐標
-            //確認nx和ny是不是在迷宮的寬度和高度範圍內
-            if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height && this.map[ny][nx] === 1) {
-                //如果nx和ny在範圍內，並且這個位置是牆壁，將這個牆壁加入邊界清單
-                this.walls.push({ x: nx, y: ny, px: startX, py: startY }); 
-            }
-            //console.log(`Wall added: (${nx}, ${ny}) with parent (${startX}, ${startY})`);
-        }
-    }
-
-    //執行一次 Prim's Algorithm 的迭代
+    // Perform one iteration of the Binary Tree Algorithm
     iterate() {
-        console.log("Iterating...");
-        if (this.walls.length === 0){
-            //this.initialize(); // 如果邊界清單為空，重新初始化迷宮
-            return false; // 如果邊界清單為空，結束
+        if (this.stack.length === 0) {
+            console.log("Maze generation complete.");
+            return false; // no more cells to process
         }
 
-        // 隨機選擇一條牆
-        let randomIndex = getRandomInt(0, this.walls.length);
-        let wall = this.walls.splice(randomIndex, 1)[0];
+        // Get the current cell from the top of the stack
+        let current = this.stack[this.stack.length - 1];
+        let x = current.x;
+        let y = current.y;
 
-        let { x, y, px, py } = wall;
-
-        // 计算对面单元格
-            const dx = x - px;
-            const dy = y - py;
-            const nx = x + dx;
-            const ny = y + dy;
-
-        // 检查对面单元格是否有效且未访问
-        if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height && 
-            this.map[ny][nx] === 1) {
-            
-            // 打通当前墙和对面单元格
-            this.map[y][x] = 0;
-            this.map[ny][nx] = 0;
-            this.visited.push({x: x, y: y});
-            
-            // 添加新单元格的邻墙
-            this.addWalls(nx, ny);
-            
-            return true; // 返回true表示有变化
+        // Check possible neighbors (right and bottom)
+        let neighbors = [];
+        if (x < this.width - 1 && this.map[y][x + 1] === 1) {
+            neighbors.push({ x: x + 1, y: y }); // right neighbor
         }
-        
-        iterateOrNot = false; // 如果没有变化，设置为false 
-        return false; // 返回false表示无变化
+        if (y < this.height - 1 && this.map[y + 1][x] === 1) {
+            neighbors.push({ x: x, y: y + 1 }); // bottom neighbor
+        }
 
-        // 如果牆的另一側節點未訪問，將其設為通路
-        /*if (this.map[y][x] === 1) {
-            
-            
-
-            if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height && this.map[ny][nx] === 1) {
-                this.map[y][x] = 0; // 打通当前墙
-                this.visited.push({x: nx, y: ny}); // 标记对面节点为已访问
-                this.addWalls(nx, ny); // 添加新节点的邻墙
-            }
-        }*/
-
-        console.log("Maze map updated:", this.map);
+        if (neighbors.length > 0) {
+            // Randomly choose a neighbor to connect
+            let chosen = neighbors[Math.floor(Math.random() * neighbors.length)];
+            this.map[chosen.y][chosen.x] = 0; // carve passage
+            this.stack.push(chosen); // add new cell to stack
+            console.log(`Carved passage to (${chosen.x}, ${chosen.y})`);
+        } else {
+            // No valid neighbors, remove current cell from stack
+            this.stack.pop();
+            console.log(`Backtracked from (${x}, ${y})`);
+        }
+        return true; // indicate that an iteration occurred
     }
 }
 
-//建立迷宮物件（Maze）和繪圖物件（View）
+// Create maze and view objects
 let maze = new Maze(mazeWidth, mazeHeight);
-maze.initialize(); // 初始化迷宮
+maze.initialize(); // initialize maze
 let view = new View();
 
 view.drawMaze(maze, highlightOrigin, hideText);
 
-//每次迭代執行一次演算法
+// Main animation loop
 function mainLoop() {
     console.log("animating...");
     maze.iterate();
@@ -171,46 +99,42 @@ function mainLoop() {
     else console.log("animation stopped");
 }
 
-// event listeners
-document.addEventListener("click", function(event) {
+// Event listeners
+document.addEventListener("contextmenu", function(event) {
+    event.preventDefault(); // prevent default right-click menu
     let start = Date.now();
-    if(iterateOrNot === true){
-        for (let i = 0; i < algorithmIterations; i++) {
-            maze.iterate();
+    if (iterateOrNot === true) {
+        // Run iterations until maze is complete or max iterations reached
+        let i = 0;
+        while (maze.iterate() && i < algorithmIterations) {
+            i++;
         }
-    }
-    else{
+        console.log(`Performed ${i} iterations.`);
+    } else {
         maze = new Maze(mazeWidth, mazeHeight);
         maze.initialize();
-        view.drawMaze(maze, highlightOrigin, hideText);
-        //this.walls = [];
-        //this.visited = [];
         maze.iterate();
         iterateOrNot = true;
         console.log("Maze reinitialized");
     }
     let end = Date.now();
-    console.log(`Performed ${algorithmIterations} iterations. Execution time: ${end - start} milliseconds`);
-
+    console.log(`Execution time: ${end - start} milliseconds`);
     view.drawMaze(maze, highlightOrigin, hideText);
 });
 
 document.addEventListener("keydown", function(event) {
-    console.log(`Key pressed: ${event.key}`); // 調試訊息
+    console.log(`Key pressed: ${event.key}`);
     event.preventDefault();
     switch (event.key) {
         case " ":
-            // toggle animation
             animate = !animate;
-            if(animate) mainLoop();
+            if (animate) mainLoop();
             break;
         case "i":
-            // one iteration
             maze.iterate();
             view.drawMaze(maze, highlightOrigin, hideText);
             break;
         case "o":
-            // toggle highlight origin
             highlightOrigin = !highlightOrigin;
             console.log(highlightOrigin);
             view.drawMaze(maze, highlightOrigin, hideText);
@@ -224,8 +148,7 @@ document.addEventListener("keydown", function(event) {
     }
 });
 
-
-// helpers
+// Helper function
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min) + min); // min inclusive, max exclusive
 }
