@@ -1,6 +1,6 @@
 // global variables 
-let mazeWidth = 20;
-let mazeHeight = 20;
+let mazeWidth = 30;
+let mazeHeight = 30;
 let algorithmIterations = mazeWidth * mazeHeight * 10; // how many iterations should be performed when running the algorithm
 let animationFPS = 10; // frames per second
 let drawArrow = false; // whether to show the direction of each node or not. Toggle with "a" key
