@@ -88,13 +88,17 @@ class Maze {
             let nx = startX + dir.dx;// 計算新位置的 x 坐標
             let ny = startY + dir.dy;// 計算新位置的 y 坐標
             //確認nx和ny是不是在迷宮的寬度和高度範圍內
-            if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height && this.map[ny][nx] === 1) {
-                //如果nx和ny在範圍內，並且這個位置是牆壁，將這個牆壁加入邊界清單
-                this.walls.push({ x: nx, y: ny, px: startX, py: startY }); 
-            }
-            //console.log(`Wall added: (${nx}, ${ny}) with parent (${startX}, ${startY})`);
+            // Only add walls that are NOT on the outer edge
+        if (
+            nx > 0 && nx < this.width - 1 &&
+            ny > 0 && ny < this.height - 1 &&
+            this.map[ny][nx] === 1
+        ) {
+            this.walls.push({ x: nx, y: ny, px: startX, py: startY }); 
         }
-    }
+                    //console.log(`Wall added: (${nx}, ${ny}) with parent (${startX}, ${startY})`);
+                }
+            }
 
     //執行一次 Prim's Algorithm 的迭代
     iterate() {

@@ -1,187 +1,177 @@
-/*
-Maze Generator Algorithm by CaptainLuma
-Last Updated 1/12/2024
-*/
-
-// global variables (feel free to edit these values)
-let mazeWidth = 10;
-let mazeHeight = 10;
+// global variables 
+let mazeWidth = 20;
+let mazeHeight = 20;
 let algorithmIterations = mazeWidth * mazeHeight * 10; // how many iterations should be performed when running the algorithm
-let animationFPS = 24; // frames per second
+let animationFPS = 10; // frames per second
 let drawArrow = false; // whether to show the direction of each node or not. Toggle with "a" key
 let highlightOrigin = true; // wether to highlight the origin node or not. Toggle with "o" key
-let hideText = false; // Toggle with "h" keyg
+let hideText = false; // Toggle with "h" key
 let animate = false; //  whether to animate the algorithm or not. Toggle with space bar
-
-class Node {
-    constructor(directionX = 0, directionY = 0) {
-        this.direction = {x: directionX, y: directionY};
-    }
-
-    setDirection(x, y) {
-        this.direction.x = x;
-        this.direction.y = y;
-    }
-}
+let iterateOrNot = true; // whether to iterate or not. Toggle with "i" key
 
 class Maze {
+    //  初始化迷宮的高度寬度，生成nodes的map
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.map = this.newMap();
-        this.visited = Array.from({ length: height }, () => Array(width).fill(false));
-        // Choose a random starting point
-        const startX = getRandomInt(0, width);
-        const startY = getRandomInt(0, height);
-        this.origin = { x: startX, y: startY };
-        this.stack = [{ x: startX, y: startY }];
-        this.visited[startY][startX] = true;
-        this.possibleDirections = [
-            { x: -1, y: 0 }, // left
-            { x: 0, y: -1 }, // up
-            { x: 1, y: 0 },  // right
-            { x: 0, y: 1 }   // down
-        ];
+        console.log(`Maze dimensions: ${width}x${height}`);
+        this.map = this.newMap(); // the array of nodes defining the maze
+        this.stack = []; // 用於DFS的堆疊
+        this.visited = []; // 記錄已經遍歷過的節點
+        this.origin = null; // 初始化 origin 為 null
     }
 
-    // returns a map of a valid maze
+    //初始化迷宮地圖為牆壁
     newMap() {
         let map = [];
         for (let y = 0; y < this.height; y++) {
             map.push([]);
             for (let x = 0; x < this.width; x++) {
-                map[y].push(new Node(0, 0));
+                map[y].push(1);//數字1表示牆壁
             }
         }
+        console.log("New map created:", map);
         return map;
     }
 
-    setOrigin(x, y) {
-        this.origin.x = x;
-        this.origin.y = y;
+    //隨機選擇起始地點
+    initialize(){
+        console.log("Initializing maze...");
+        this.map = this.newMap(); // 每次初始化都重建地圖
+        this.visited = [];
+        this.stack = [];
+
+        // 產生只會在邊界的 x, y
+        let edgePositions = [0, this.width - 1];
+        let startX = 0;
+        let startY = 0;
+        // 持續隨機直到不是四個角落
+        while (true) {
+            if (Math.random() < 0.5) {
+                startX = edgePositions[Math.floor(Math.random() * 2)];
+                startY = getRandomInt(0, this.height);
+            } 
+            else {
+                startY = edgePositions[Math.floor(Math.random() * 2)];
+                startX = getRandomInt(0, this.width);
+            }
+            // 如果不是四個角落就跳出
+            if (!((startX === 0 || startX === this.width - 1) && (startY === 0 || startY === this.height - 1))) {
+                break;
+            }
+        }
+
+        this.origin = { x: startX, y: startY }; // 在 initialize 方法中設置
+        this.map[startY][startX] = 0; //0 表示通路
+        this.visited.push({ x: startX, y: startY });
+        this.stack.push({ x: startX, y: startY });
+        console.log("Maze initialized:", this.map);
+        console.log("Origin set to:", this.origin);
     }
 
-    // performs one iteration of the DFS algorithm
+    // 取得未拜訪的鄰居（跳過一格，因為牆壁在中間）
+    getUnvisitedNeighbors(x, y) {
+    const directions = [
+        { dx: -2, dy: 0 }, // left
+        { dx: 2, dy: 0 },  // right
+        { dx: 0, dy: -2 }, // up
+        { dx: 0, dy: 2 }   // down
+    ];
+    let neighbors = [];
+    for (let dir of directions) {
+        let nx = x + dir.dx;
+        let ny = y + dir.dy;
+        // Only allow neighbors that are NOT on the outer edge
+        if (
+            nx > 0 && nx < this.width - 1 &&
+            ny > 0 && ny < this.height - 1 &&
+            this.map[ny][nx] === 1
+        ) {
+            neighbors.push({ nx, ny, dx: dir.dx, dy: dir.dy });
+        }
+    }
+    return neighbors;
+}
+
+    // 執行一次 DFS 的迭代
     iterate() {
-        if (this.stack.length === 0) return;
+        if (this.stack.length === 0) {
+            return false; // 沒有可走的路了
+        }
 
         let current = this.stack[this.stack.length - 1];
         let { x, y } = current;
 
-        // Find all unvisited neighbors
-        let neighbors = [];
-        for (let dir of this.possibleDirections) {
-            let nx = x + dir.x;
-            let ny = y + dir.y;
-            if (
-                nx >= 0 && nx < this.width &&
-                ny >= 0 && ny < this.height &&
-                !this.visited[ny][nx]
-            ) {
-                neighbors.push({ x: nx, y: ny, dir });
-            }
-        }
+        let neighbors = this.getUnvisitedNeighbors(x, y);
 
         if (neighbors.length > 0) {
-            // Choose a random neighbor
-            let next = neighbors[getRandomInt(0, neighbors.length)];
-            // Carve passage from current to next
-            this.map[y][x].setDirection(next.dir.x, next.dir.y);
-            // Carve passage from next to current (for backtracking)
-            this.map[next.y][next.x].setDirection(-next.dir.x, -next.dir.y);
-            this.visited[next.y][next.x] = true;
-            this.stack.push({ x: next.x, y: next.y });
-            this.setOrigin(next.x, next.y);
+            // 隨機選一個未拜訪的鄰居
+            let randIdx = getRandomInt(0, neighbors.length);
+            let { nx, ny, dx, dy } = neighbors[randIdx];
+
+            // 打通牆壁（中間那格）
+            let wallX = x + dx / 2;
+            let wallY = y + dy / 2;
+            this.map[wallY][wallX] = 0;
+
+            // 標記鄰居為通路並加入堆疊
+            this.map[ny][nx] = 0;
+            this.visited.push({ x: nx, y: ny });
+            this.stack.push({ x: nx, y: ny });
         } else {
-            // Backtrack
+            // 沒有未拜訪鄰居就回退
             this.stack.pop();
-            if (this.stack.length > 0) {
-                let prev = this.stack[this.stack.length - 1];
-                this.setOrigin(prev.x, prev.y);
-            }
         }
+        return true;
     }
 }
 
-// create the maze
+//建立迷宮物件（Maze）和繪圖物件（View）
 let maze = new Maze(mazeWidth, mazeHeight);
+maze.initialize(); // 初始化迷宮
 let view = new View();
+view.drawMaze(maze, highlightOrigin, hideText);
 
-view.drawMaze(maze, drawArrow, highlightOrigin, hideText);
-
-// animation loop
+//每次迭代執行一次演算法
 function mainLoop() {
     maze.iterate();
-    view.drawMaze(maze, drawArrow, highlightOrigin, hideText);
+    view.drawMaze(maze, highlightOrigin, hideText);
     if (animate) setTimeout(mainLoop, 1000 / animationFPS);
 }
 
-// event listeners
 document.addEventListener("click", function(event) {
-    if (maze.stack.length === 0) {
-        maze = new Maze(mazeWidth, mazeHeight);
-    } else {
-        let start = Date.now();
-        for (let i = 0; i < algorithmIterations; i++) {
-            maze.iterate();
-        }
-        let end = Date.now();
-        console.log(`Performed ${algorithmIterations} iterations. Execution time: ${end - start} milliseconds`);
-    }
-    view.drawMaze(maze, drawArrow, highlightOrigin, hideText);
+    maze = new Maze(mazeWidth, mazeHeight);
+    maze.initialize();
+    view.drawMaze(maze, highlightOrigin, hideText);
 });
 
 document.addEventListener("keydown", function(event) {
+    event.preventDefault();
     switch (event.key) {
         case " ":
             // toggle animation
             animate = !animate;
-            setTimeout(mainLoop, 1000 / animationFPS);
-            break;
-        case "a":
-            // toggle arrows
-            drawArrow = !drawArrow;
-            view.drawMaze(maze, drawArrow, highlightOrigin, hideText);
+            if(animate) mainLoop();
             break;
         case "i":
             // one iteration
             maze.iterate();
-            view.drawMaze(maze, drawArrow, highlightOrigin, hideText);
+            view.drawMaze(maze, highlightOrigin, hideText);
             break;
         case "o":
             // toggle highlight origin
             highlightOrigin = !highlightOrigin;
-            console.log(highlightOrigin);
-            view.drawMaze(maze, drawArrow, highlightOrigin, hideText);
+            view.drawMaze(maze, highlightOrigin, hideText);
             break;
         case "h":
             hideText = !hideText;
-            view.drawMaze(maze, drawArrow, highlightOrigin, hideText);
+            view.drawMaze(maze, highlightOrigin, hideText);
             break;
         default:
             break;
     }
 });
 
-document.getElementById('apply').addEventListener('click', updateMazeDimensions);
-
-function updateMazeDimensions() {
-    // validate
-    try {
-        mazeWidth = parseInt(document.getElementById('width').value);
-        mazeHeight = parseInt(document.getElementById('height').value);
-
-        if (mazeWidth < 1 || mazeHeight < 1) throw new error("values can't be 0 or negative");
-    } catch {
-        mazeWidth = 10;
-        mazeHeight = 10;
-    }
-    
-    algorithmIterations = mazeWidth * mazeHeight * 10;
-    maze = new Maze(mazeWidth, mazeHeight);
-}
-
-// helpers
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min) + min); // min inclusive, max exclusive
 }
