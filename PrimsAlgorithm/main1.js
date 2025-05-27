@@ -2,7 +2,7 @@
 let mazeWidth = 20;
 let mazeHeight = 20;
 let algorithmIterations = mazeWidth * mazeHeight * 10; // how many iterations should be performed when running the algorithm
-let animationFPS = 3; // frames per second
+let animationFPS = 10; // frames per second
 let drawArrow = false; // whether to show the direction of each node or not. Toggle with "a" key
 let highlightOrigin = true; // wether to highlight the origin node or not. Toggle with "o" key
 let hideText = false; // Toggle with "h" key
