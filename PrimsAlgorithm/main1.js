@@ -1,17 +1,14 @@
-// global variables (feel free to edit these values)
-let mazeWidth = 30;
-let mazeHeight = 30;
+// global variables 
+let mazeWidth = 20;
+let mazeHeight = 20;
 let algorithmIterations = mazeWidth * mazeHeight * 10; // how many iterations should be performed when running the algorithm
 let animationFPS = 3; // frames per second
 let drawArrow = false; // whether to show the direction of each node or not. Toggle with "a" key
 let highlightOrigin = true; // wether to highlight the origin node or not. Toggle with "o" key
-let hideText = false; // Toggle with "h" keyg
+let hideText = false; // Toggle with "h" key
 let animate = false; //  whether to animate the algorithm or not. Toggle with space bar
 let iterateOrNot = true; // whether to iterate or not. Toggle with "i" key
 
-// 這個類別用來繪製迷宮的視圖，包含一個canvas元素和一個2D繪圖上下文
-// 它有一個drawMaze方法，用來繪製迷宮，這個方法接受一個迷宮物件和一些選項參數
-// drawMaze方法會計算迷宮的大小和位置，然後用canvas的2D繪圖上下文來繪製迷宮
 class Maze {
     //  初始化迷宮的高度寬度，生成nodes的map
     constructor(width, height) {
@@ -44,7 +41,7 @@ class Maze {
     //隨機選擇起始地點
     initialize(){
         console.log("Initializing maze...");
-        this.map = this.newMap(); // ← 每次初始化都重建地圖
+        this.map = this.newMap(); // 每次初始化都重建地圖
         this.visited = [];
         this.walls = [];
 
@@ -52,8 +49,7 @@ class Maze {
         let edgePositions = [0, this.width - 1];
         let startX = 0;
         let startY = 0;
-        //if (Math.random() < 0.5) {
-        // x 在邊界，y// 持續隨機直到不是四個角落
+        // 持續隨機直到不是四個角落
         console.log('iterateOrNot:', iterateOrNot);
         while (true) {
             if (Math.random() < 0.5) {
@@ -77,7 +73,6 @@ class Maze {
         this.addWalls(startX, startY);
         console.log("Maze initialized:", this.map);
         console.log("Origin set to:", this.origin);
-        //}
     }
 
     // 將節點的鄰居加入邊界清單
@@ -145,7 +140,6 @@ class Maze {
 let maze = new Maze(mazeWidth, mazeHeight);
 maze.initialize(); // 初始化迷宮
 let view = new View();
-
 view.drawMaze(maze, highlightOrigin, hideText);
 
 //每次迭代執行一次演算法
@@ -169,8 +163,6 @@ document.addEventListener("click", function(event) {
         maze = new Maze(mazeWidth, mazeHeight);
         maze.initialize();
         view.drawMaze(maze, highlightOrigin, hideText);
-        //this.walls = [];
-        //this.visited = [];
         maze.iterate();
         iterateOrNot = true;
         console.log("Maze reinitialized");
@@ -210,8 +202,6 @@ document.addEventListener("keydown", function(event) {
     }
 });
 
-
-// helpers
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min) + min); // min inclusive, max exclusive
 }
