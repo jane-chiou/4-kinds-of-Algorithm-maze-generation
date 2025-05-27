@@ -1,6 +1,6 @@
 // global variables 
-let mazeWidth = 20;
-let mazeHeight = 20;
+let mazeWidth =22;
+let mazeHeight = 22 ;
 let algorithmIterations = mazeWidth * mazeHeight * 10; // how many iterations should be performed when running the algorithm
 let animationFPS = 10; // frames per second
 let drawArrow = false; // whether to show the direction of each node or not. Toggle with "a" key
@@ -86,7 +86,7 @@ class Maze {
             nx > 0 && nx < this.width - 1 &&
             ny > 0 && ny < this.height - 1 &&
             this.map[ny][nx] === 1
-        ) {
+            ) {
             neighbors.push({ nx, ny, dx: dir.dx, dy: dir.dy });
         }
     }
@@ -140,19 +140,31 @@ function mainLoop() {
 }
 
 document.addEventListener("click", function(event) {
-    maze = new Maze(mazeWidth, mazeHeight);
-    maze.initialize();
+    // If the maze is finished, reset it
+    if (maze.stack.length === 0) {
+        maze = new Maze(mazeWidth, mazeHeight);
+        maze.initialize();
+    }
+    // Run enough iterations to generate the maze (or a chunk of it)
+    for (let i = 0; i < algorithmIterations; i++) {
+        if (!maze.iterate()) break; // Stop if finished
+    }
     view.drawMaze(maze, highlightOrigin, hideText);
 });
 
 document.addEventListener("keydown", function(event) {
     event.preventDefault();
     switch (event.key) {
-        case " ":
-            // toggle animation
-            animate = !animate;
-            if(animate) mainLoop();
-            break;
+            case " ":
+        animate = !animate;
+        if (animate) {
+            if (maze.stack.length === 0) {
+                maze = new Maze(mazeWidth, mazeHeight);
+                maze.initialize();
+            }
+            mainLoop();
+        }
+        break;
         case "i":
             // one iteration
             maze.iterate();
